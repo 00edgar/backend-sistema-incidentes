@@ -1,0 +1,13 @@
+{
+  "name": "Flujo 2 - Asistencia RAG",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "meta": {
+    "responsable": "Dev3",
+    "historiaClickUp": "2.8.1 a 2.8.4",
+    "rf": "RF04, RF05",
+    "pendiente": "Construir en n8n: Webhook -> embedding de la descripcion -> busqueda en Qdrant -> filtro por umbral -> contexto -> generacion fundamentada -> respuesta con fuentes y similitudes. Ramas: sin fuentes y error. Exportar aqui el JSON."
+  }
+}

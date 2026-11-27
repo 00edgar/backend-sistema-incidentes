@@ -1,0 +1,13 @@
+{
+  "name": "Flujo 1 - Indexacion de articulos",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": {},
+  "meta": {
+    "responsable": "Dev1",
+    "historiaClickUp": "2.1.1, 2.1.2, 2.1.3",
+    "rf": "RF03",
+    "pendiente": "Construir en n8n: Webhook -> consultar articulos activos y verificados en PostgreSQL -> embeddings -> upsert en Qdrant (id determinista) -> eliminar desactivados. Exportar aqui el JSON."
+  }
+}
