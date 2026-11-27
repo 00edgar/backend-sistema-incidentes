@@ -1,0 +1,123 @@
+// Responsable: Dev2 | Historia ClickUp: 1.5.2 | RF01-RF08
+// Esquema base. Contiene las 8 entidades y sus relaciones; faltan restricciones e indices.
+//
+// TODO (Dev2, historias 1.5.2 y 1.6):
+//  - Agregar @unique, @@index y claves foraneas con onDelete adecuado.
+//  - Restricciones CHECK (puntuacion 1 a 5, similitud 0 a 1, fechaCierre >= fechaCreacion): agregarlas en una migracion SQL.
+//  - Confirmar si estados y prioridades quedan como enum (como aqui) o como tablas catalogo.
+//  - Ejecutar: npm run prisma:migrar  y  npm run prisma:generar
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoIncidente {
+  ABIERTO     @map("Abierto")
+  EN_PROGRESO @map("En progreso")
+  RESUELTO    @map("Resuelto")
+  CERRADO     @map("Cerrado")
+}
+
+enum PrioridadIncidente {
+  BAJA    @map("Baja")
+  MEDIA   @map("Media")
+  ALTA    @map("Alta")
+  CRITICA @map("Critica")
+}
+
+enum EstadoArticulo {
+  ACTIVO   @map("Activo")
+  INACTIVO @map("Inactivo")
+}
+
+enum EstadoConsultaIA {
+  PENDIENTE      @map("Pendiente")
+  RESPONDIDA     @map("Respondida")
+  SIN_RESULTADOS @map("Sin resultados")
+  ERROR          @map("Error")
+}
+
+model Usuario {
+  id         Int         @id @default(autoincrement())
+  nombre     String
+  correo     String
+  area       String
+  incidentes Incidente[]
+}
+
+model Categoria {
+  id          Int         @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  incidentes  Incidente[]
+}
+
+model Incidente {
+  id                   Int                @id @default(autoincrement())
+  titulo               String
+  descripcion          String
+  idCategoria          Int
+  prioridad            PrioridadIncidente
+  estado               EstadoIncidente    @default(ABIERTO)
+  fechaCreacion        DateTime           @default(now())
+  fechaCierre          DateTime?
+  idUsuarioResponsable Int
+  categoria            Categoria          @relation(fields: [idCategoria], references: [id])
+  usuarioResponsable   Usuario            @relation(fields: [idUsuarioResponsable], references: [id])
+  consultasIA          ConsultaIA[]
+}
+
+model ArticuloConocimiento {
+  id         Int              @id @default(autoincrement())
+  titulo     String
+  problema   String
+  sintomas   String
+  causa      String
+  solucion   String
+  fecha      DateTime         @default(now())
+  estado     EstadoArticulo   @default(ACTIVO)
+  verificado Boolean          @default(false)
+  fuentes    FuenteRespuesta[]
+}
+
+model ConsultaIA {
+  id          Int              @id @default(autoincrement())
+  idIncidente Int
+  pregunta    String
+  fecha       DateTime         @default(now())
+  estado      EstadoConsultaIA @default(PENDIENTE)
+  incidente   Incidente        @relation(fields: [idIncidente], references: [id])
+  respuestas  RespuestaIA[]
+}
+
+model RespuestaIA {
+  id             Int               @id @default(autoincrement())
+  idConsulta     Int
+  respuesta      String
+  fecha          DateTime          @default(now())
+  consulta       ConsultaIA        @relation(fields: [idConsulta], references: [id])
+  fuentes        FuenteRespuesta[]
+  calificaciones Calificacion[]
+}
+
+model FuenteRespuesta {
+  id          Int                  @id @default(autoincrement())
+  idRespuesta Int
+  idArticulo  Int
+  similitud   Float
+  respuesta   RespuestaIA          @relation(fields: [idRespuesta], references: [id])
+  articulo    ArticuloConocimiento @relation(fields: [idArticulo], references: [id])
+}
+
+model Calificacion {
+  id          Int         @id @default(autoincrement())
+  idRespuesta Int
+  puntuacion  Int
+  comentario  String?
+  respuesta   RespuestaIA @relation(fields: [idRespuesta], references: [id])
+}
