@@ -1,0 +1,28 @@
+{
+  "name": "backend-sistema-incidentes",
+  "version": "0.1.0",
+  "description": "API REST (Node.js + Express) con arquitectura hexagonal para el sistema inteligente de analisis de incidentes",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "iniciar": "node src/servidor.js",
+    "desarrollo": "node --watch src/servidor.js",
+    "probar": "node --test",
+    "prisma:generar": "prisma generate",
+    "prisma:migrar": "prisma migrate dev",
+    "prisma:aplicarMigraciones": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}
