@@ -19,7 +19,8 @@
     "infraestructura:prepararBaseDatos": "bash scripts/infraestructuraLocal/prepararBaseDatos.sh",
     "infraestructura:iniciar": "bash scripts/infraestructuraLocal/iniciarServiciosLocales.sh",
     "infraestructura:importarFlujos": "bash scripts/infraestructuraLocal/importarFlujosN8n.sh",
-    "infraestructura:detener": "bash scripts/infraestructuraLocal/detenerServiciosLocales.sh"
+    "infraestructura:detener": "bash scripts/infraestructuraLocal/detenerServiciosLocales.sh",
+    "proveedorIaLocal:iniciar": "node scripts/proveedorIaLocal/servidorEmbeddingsLocal.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
