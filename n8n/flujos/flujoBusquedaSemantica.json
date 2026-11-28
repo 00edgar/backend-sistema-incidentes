@@ -1,0 +1,284 @@
+{
+  "id": "busquedaSemantica",
+  "name": "Busqueda semantica de articulos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "busqueda-semantica",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook busqueda",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "6f1c9d7e-3b0a-4c55-9a52-7c2d8e4b1a10"
+    },
+    {
+      "parameters": {
+        "jsCode": "const solicitud = $input.first().json;\nconst cabeceras = solicitud.headers ?? {};\nconst cuerpo = solicitud.body ?? {};\nconst tokenEsperado = $env.N8N_TOKEN_SECRETO ?? '';\n\nfunction rechazar(codigoHttp, mensaje) {\n  return [{ json: { valida: false, codigoHttp, respuesta: { estado: 'Error', mensaje } } }];\n}\n\nif (!tokenEsperado || cabeceras['x-token-secreto'] !== tokenEsperado) {\n  return rechazar(401, 'Token no autorizado');\n}\n\nconst descripcion = typeof cuerpo.descripcion === 'string' ? cuerpo.descripcion.trim() : '';\nif (!descripcion) {\n  return rechazar(400, 'La descripcion no puede estar vacia');\n}\n\nconst limiteMinimo = Number($env.LIMITE_MINIMO_FUENTES ?? 3);\nconst limiteMaximo = Number($env.LIMITE_MAXIMO_FUENTES ?? 5);\nconst umbral = cuerpo.umbralSimilitud ?? Number($env.UMBRAL_SIMILITUD ?? 0.6);\nconst limite = cuerpo.limiteResultados ?? limiteMaximo;\nconst coleccion = cuerpo.coleccion ?? $env.QDRANT_COLECCION ?? 'articulosConocimiento';\n\nif (typeof umbral !== 'number' || Number.isNaN(umbral) || umbral < 0 || umbral > 1) {\n  return rechazar(400, 'umbralSimilitud debe ser un numero entre 0 y 1');\n}\nif (!Number.isInteger(limite) || limite < limiteMinimo || limite > limiteMaximo) {\n  return rechazar(400, `limiteResultados debe ser un entero entre ${limiteMinimo} y ${limiteMaximo}`);\n}\nif (typeof coleccion !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(coleccion)) {\n  return rechazar(400, 'coleccion tiene un nombre no valido');\n}\n\nreturn [{ json: { valida: true, descripcion, umbral, limite, limiteMinimo, coleccion } }];"
+      },
+      "name": "Validar solicitud",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "condicionSolicitudValida",
+              "leftValue": "={{ $json.valida }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Solicitud valida",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PROVEEDOR_IA_URL_BASE + '/v1/embeddings' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + ($env.PROVEEDOR_IA_API_KEY || 'sin-clave') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.PROVEEDOR_IA_MODELO_EMBEDDINGS, input: $('Validar solicitud').first().json.descripcion } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Generar embedding de la consulta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        200
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL + '/collections/' + $('Validar solicitud').first().json.coleccion + '/points/search' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { vector: $json.data[0].embedding, limit: $('Validar solicitud').first().json.limite, score_threshold: $('Validar solicitud').first().json.umbral, with_payload: true } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Buscar en Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        100
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parametros = $('Validar solicitud').first().json;\nconst puntos = $input.first().json.result ?? [];\n\nconst resultados = puntos\n  .map((punto) => ({\n    idArticulo: punto.payload?.idArticulo ?? punto.id,\n    titulo: punto.payload?.titulo ?? null,\n    categoria: punto.payload?.categoria ?? null,\n    similitud: Number(punto.score.toFixed(4)),\n    problema: punto.payload?.problema ?? null,\n    solucion: punto.payload?.solucion ?? null,\n    fecha: punto.payload?.fecha ?? null,\n  }))\n  .sort((a, b) => b.similitud - a.similitud);\n\nconst respuesta = {\n  estado: resultados.length > 0 ? 'Con resultados' : 'Sin resultados',\n  umbralSimilitud: parametros.umbral,\n  limiteResultados: parametros.limite,\n  total: resultados.length,\n  suficientes: resultados.length >= parametros.limiteMinimo,\n  resultados,\n};\n\nif (resultados.length === 0) {\n  respuesta.mensaje = 'No hay informacion suficiente';\n}\n\nreturn [{ json: { codigoHttp: 200, respuesta } }];"
+      },
+      "name": "Armar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    codigoHttp: 502,\n    respuesta: { estado: 'Error', mensaje: 'El servicio de embeddings no esta disponible' },\n  },\n}];"
+      },
+      "name": "Error de embeddings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const mensajeOrigen = String($input.first().json.error?.message ?? '');\nconst coleccionInexistente = /^\\s*404\\b/.test(mensajeOrigen);\nconst mensaje = coleccionInexistente\n  ? 'La coleccion no existe. Ejecutar primero la indexacion de articulos'\n  : 'La base vectorial no esta disponible';\nreturn [{ json: { codigoHttp: 502, respuesta: { estado: 'Error', mensaje } } }];"
+      },
+      "name": "Error de Qdrant",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.respuesta }}",
+        "options": {
+          "responseCode": "={{ $json.codigoHttp }}"
+        }
+      },
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook busqueda": {
+      "main": [
+        [
+          {
+            "node": "Validar solicitud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar solicitud": {
+      "main": [
+        [
+          {
+            "node": "Solicitud valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Solicitud valida": {
+      "main": [
+        [
+          {
+            "node": "Generar embedding de la consulta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar embedding de la consulta": {
+      "main": [
+        [
+          {
+            "node": "Buscar en Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error de embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar en Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error de Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error de embeddings": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error de Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
