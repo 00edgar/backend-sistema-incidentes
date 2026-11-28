@@ -1,0 +1,32 @@
+{
+  "consultasRelevantes": [
+    { "consulta": "Mi computadora quedó lentísima después de actualizar Windows", "idArticuloEsperado": 1 },
+    { "consulta": "No me deja instalar un programa, dice que necesito permisos de administrador", "idArticuloEsperado": 2 },
+    { "consulta": "Pantalla azul con error de controlador incompatible", "idArticuloEsperado": 3 },
+    { "consulta": "La computadora de escritorio no prende al presionar el botón de poder", "idArticuloEsperado": 6 },
+    { "consulta": "La impresora se atasca y saca las hojas arrugadas", "idArticuloEsperado": 7 },
+    { "consulta": "El disco duro hace clic y abre los archivos muy lento", "idArticuloEsperado": 8 },
+    { "consulta": "No tengo internet y mi adaptador de red muestra una dirección 169.254", "idArticuloEsperado": 11 },
+    { "consulta": "El wifi de la oficina se corta cada pocos minutos", "idArticuloEsperado": 12 },
+    { "consulta": "La VPN me marca error de autenticación desde mi casa", "idArticuloEsperado": 13 },
+    { "consulta": "Los sitios no abren por nombre pero con la IP sí responde el ping", "idArticuloEsperado": 14 },
+    { "consulta": "La aplicación web interna da error 500 después del despliegue", "idArticuloEsperado": 16 },
+    { "consulta": "Outlook dice desconectado y no llegan correos nuevos", "idArticuloEsperado": 17 },
+    { "consulta": "Excel se cierra solo cuando abro un libro con macros", "idArticuloEsperado": 18 },
+    { "consulta": "Mi cuenta de usuario quedó bloqueada por intentos fallidos de contraseña", "idArticuloEsperado": 21 },
+    { "consulta": "No puedo entrar a la carpeta compartida, me dice acceso denegado", "idArticuloEsperado": 22 },
+    { "consulta": "La copia de seguridad de anoche falló por falta de espacio en disco", "idArticuloEsperado": 23 },
+    { "consulta": "El servidor de archivos está muy lento por las mañanas", "idArticuloEsperado": 24 }
+  ],
+  "consultasSinRelacion": [
+    { "consulta": "Quiero reservar una sala de reuniones para el lunes" },
+    { "consulta": "Receta de pastel de chocolate con fresas" },
+    { "consulta": "Cómo solicito mis vacaciones de diciembre" },
+    { "consulta": "Resultado del partido de fútbol de ayer" }
+  ],
+  "consultasSobreArticulosExcluidos": [
+    { "consulta": "La aplicación de nómina muestra error de licencia al iniciar", "idArticuloExcluido": 20 },
+    { "consulta": "El antivirus manda a cuarentena un ejecutable interno", "idArticuloExcluido": 5 },
+    { "consulta": "Algunas teclas del teclado no responden", "idArticuloExcluido": 10 }
+  ]
+}

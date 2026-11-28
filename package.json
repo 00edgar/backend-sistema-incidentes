@@ -20,7 +20,9 @@
     "infraestructura:iniciar": "bash scripts/infraestructuraLocal/iniciarServiciosLocales.sh",
     "infraestructura:importarFlujos": "bash scripts/infraestructuraLocal/importarFlujosN8n.sh",
     "infraestructura:detener": "bash scripts/infraestructuraLocal/detenerServiciosLocales.sh",
-    "proveedorIaLocal:iniciar": "node scripts/proveedorIaLocal/servidorEmbeddingsLocal.js"
+    "proveedorIaLocal:iniciar": "node scripts/proveedorIaLocal/servidorEmbeddingsLocal.js",
+    "busquedaSemantica:indexarPrueba": "node scripts/proveedorIaLocal/indexarArticulosParaPruebasDeBusqueda.js --coleccion pruebasBusquedaSemantica",
+    "busquedaSemantica:calibrar": "node scripts/proveedorIaLocal/calibrarUmbralSimilitud.js --coleccion pruebasBusquedaSemantica"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
