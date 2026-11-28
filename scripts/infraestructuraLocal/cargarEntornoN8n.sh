@@ -10,6 +10,7 @@ if [ ! -x "$EJECUTABLE_N8N" ]; then
 fi
 
 export N8N_PORT="$(puerto_de_url "${N8N_URL_BASE:-http://localhost:5678}")"
+export N8N_RUNNERS_BROKER_PORT="$((N8N_PORT + 1))"
 export N8N_USER_FOLDER="$CARPETA_DATOS/n8n"
 export N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 export N8N_DIAGNOSTICS_ENABLED=false
