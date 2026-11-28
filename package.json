@@ -14,7 +14,12 @@
     "prisma:generar": "prisma generate",
     "prisma:migrar": "prisma migrate dev",
     "prisma:aplicarMigraciones": "prisma migrate deploy",
-    "infraestructura:verificar": "node scripts/infraestructuraLocal/verificarInfraestructura.js"
+    "infraestructura:verificar": "node scripts/infraestructuraLocal/verificarInfraestructura.js",
+    "infraestructura:instalar": "bash scripts/infraestructuraLocal/instalarQdrant.sh && bash scripts/infraestructuraLocal/instalarN8n.sh",
+    "infraestructura:prepararBaseDatos": "bash scripts/infraestructuraLocal/prepararBaseDatos.sh",
+    "infraestructura:iniciar": "bash scripts/infraestructuraLocal/iniciarServiciosLocales.sh",
+    "infraestructura:importarFlujos": "bash scripts/infraestructuraLocal/importarFlujosN8n.sh",
+    "infraestructura:detener": "bash scripts/infraestructuraLocal/detenerServiciosLocales.sh"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
